@@ -10,6 +10,11 @@ public class ArrayReader {
         this.array = array;
     }
 
+    public int size () {
+        return array.size();
+    }
+
+
     public Object get (int pos) {
         return array.get(pos);
     }
@@ -54,7 +59,7 @@ public class ArrayReader {
     }
 
     public double getDouble (int pos) {
-        return getNumber(pos).longValue();
+        return getNumber(pos).doubleValue();
     }
 
     @Override

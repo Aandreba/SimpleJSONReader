@@ -18,6 +18,10 @@ public class ObjectReader {
         this.object = (JSONObject) parser.parse(json);
     }
 
+    public int size () {
+        return object.size();
+    }
+
     public Object get (String key) {
         return object.get(key);
     }
@@ -62,7 +66,7 @@ public class ObjectReader {
     }
 
     public double getDouble (String key) {
-        return getNumber(key).longValue();
+        return getNumber(key).doubleValue();
     }
 
     @Override
