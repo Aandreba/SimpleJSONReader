@@ -18,12 +18,18 @@ public class ObjectReader {
         this.object = (JSONObject) parser.parse(json);
     }
 
+    public Object get (String key) {
+        return object.get(key);
+    }
+
     public <T> T getAs (String key) {
-        return (T) object.get(key);
+        Object val = get(key);
+        return val == null ? null : (T) val;
     }
 
     public <T> T getAs (String key, Class<T> type) {
-        return (T) object.get(key);
+        Object val = get(key);
+        return val == null ? null : (T) val;
     }
 
     public ObjectReader getObject (String key) {
@@ -35,7 +41,8 @@ public class ObjectReader {
     }
 
     public String getString (String key) {
-        return object.get(key).toString();
+        Object obj = get(key);
+        return obj == null ? null : obj.toString();
     }
 
     public Number getNumber (String key) {
@@ -56,5 +63,10 @@ public class ObjectReader {
 
     public double getDouble (String key) {
         return getNumber(key).longValue();
+    }
+
+    @Override
+    public String toString() {
+        return object.toString();
     }
 }

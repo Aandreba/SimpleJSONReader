@@ -4,18 +4,24 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 public class ArrayReader {
-    final public JSONArray object;
+    final public JSONArray array;
 
-    public ArrayReader (JSONArray object) {
-        this.object = object;
+    public ArrayReader (JSONArray array) {
+        this.array = array;
+    }
+
+    public Object get (int pos) {
+        return array.get(pos);
     }
 
     public <T> T getAs (int pos) {
-        return (T) object.get(pos);
+        Object val = get(pos);
+        return val == null ? null : (T) val;
     }
 
     public <T> T getAs (int pos, Class<T> type) {
-        return (T) object.get(pos);
+        Object val = get(pos);
+        return val == null ? null : (T) val;
     }
 
     public ObjectReader getObject (int pos) {
@@ -27,7 +33,8 @@ public class ArrayReader {
     }
 
     public String getString (int pos) {
-        return object.get(pos).toString();
+        Object obj = get(pos);
+        return obj == null ? null : obj.toString();
     }
 
     public Number getNumber (int pos) {
@@ -48,5 +55,10 @@ public class ArrayReader {
 
     public double getDouble (int pos) {
         return getNumber(pos).longValue();
+    }
+
+    @Override
+    public String toString() {
+        return array.toString();
     }
 }
