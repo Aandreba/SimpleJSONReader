@@ -43,7 +43,15 @@ public class ArrayReader {
     }
 
     public Number getNumber (int pos) {
-        return getAs(pos);
+        Object obj = get(pos);
+
+        if (obj == null) {
+            return null;
+        } else if (obj instanceof Number) {
+            return (Number) obj;
+        }
+
+        return Double.parseDouble(obj.toString());
     }
 
     public int getInt (int pos) {

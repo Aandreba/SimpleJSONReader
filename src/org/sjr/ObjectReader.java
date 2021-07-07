@@ -50,7 +50,15 @@ public class ObjectReader {
     }
 
     public Number getNumber (String key) {
-        return getAs(key);
+        Object obj = get(key);
+
+        if (obj == null) {
+            return null;
+        } else if (obj instanceof Number) {
+            return (Number) obj;
+        }
+
+        return Double.parseDouble(obj.toString());
     }
 
     public int getInt (String key) {
