@@ -2,6 +2,7 @@ package org.sjr;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.ParseException;
 
 public class ArrayReader {
     final public JSONArray array;
@@ -10,10 +11,13 @@ public class ArrayReader {
         this.array = array;
     }
 
+    public ArrayReader (String json) throws ParseException {
+        this.array = (JSONArray) ObjectReader.parser.parse(json);
+    }
+
     public int size () {
         return array.size();
     }
-
 
     public Object get (int pos) {
         return array.get(pos);

@@ -6,7 +6,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 public class ObjectReader {
-    final private static JSONParser parser = new JSONParser();
+    final protected static JSONParser parser = new JSONParser();
 
     final public JSONObject object;
 
