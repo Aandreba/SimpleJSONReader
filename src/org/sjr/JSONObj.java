@@ -62,24 +62,32 @@ public class JSONObj extends AbstractMap<String, Object> {
         return Result.ofSupplier(() -> get(key).toString());
     }
 
-    public OptionalInt getInt (String key) {
-        return getAs(key, Number.class).stream().mapToInt(Number::intValue).findFirst();
+    public Result<Integer> getInt (String key) {
+        return getAs(key, Number.class).flatMap(Number::intValue);
     }
 
-    public OptionalLong getLong (String key) {
-        return getAs(key, Number.class).stream().mapToLong(Number::longValue).findFirst();
+    public Result<Long> getLong (String key) {
+        return getAs(key, Number.class).flatMap(Number::longValue);
     }
 
-    public Optional<Float> getFloat (String key) {
-        return getAs(key,Number.class).map(Number::floatValue).toOptional();
+    public Result<Float> getFloat (String key) {
+        return getAs(key, Number.class).flatMap(Number::floatValue);
     }
 
-    public OptionalDouble getDouble (String key) {
-        return getAs(key, Number.class).stream().mapToDouble(Number::doubleValue).findFirst();
+    public Result<Double> getDouble (String key) {
+        return getAs(key, Number.class).flatMap(Number::doubleValue);
     }
 
     public <T> Result<T> getDecodable (String key, JSONDecoder<T> decoder) {
         return getObject(key).flatMap(decoder::decode);
+    }
+
+    public Result<JSONObj[]> getObjectArray (String key) {
+        return getArray(key).flatMap(x -> x.stream().map(y -> (JSONObj) y).toArray(JSONObj[]::new));
+    }
+
+    public Result<JSONArr[]> getArrayArray (String key) {
+        return getArray(key).flatMap(x -> x.stream().map(y -> (JSONArr) y).toArray(JSONArr[]::new));
     }
 
     public Result<String[]> getStringArray (String key) {
