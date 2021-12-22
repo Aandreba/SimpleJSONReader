@@ -83,11 +83,11 @@ public class JSONObj extends AbstractMap<String, Object> {
     }
 
     public Result<JSONObj[]> getObjectArray (String key) {
-        return getArray(key).flatMap(x -> x.stream().map(y -> (JSONObj) y).toArray(JSONObj[]::new));
+        return getArray(key).flatMap(x -> x.stream().map(y -> new JSONObj((JSONObject) y)).toArray(JSONObj[]::new));
     }
 
     public Result<JSONArr[]> getArrayArray (String key) {
-        return getArray(key).flatMap(x -> x.stream().map(y -> (JSONArr) y).toArray(JSONArr[]::new));
+        return getArray(key).flatMap(x -> x.stream().map(y -> new JSONArr((JSONArray) y)).toArray(JSONArr[]::new));
     }
 
     public Result<String[]> getStringArray (String key) {

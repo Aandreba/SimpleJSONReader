@@ -152,11 +152,11 @@ public class JSONArr extends AbstractList<Object> {
     }
 
     public Result<JSONObj[]> getObjectArray (int pos) {
-        return getArray(pos).flatMap(x -> x.stream().map(y -> (JSONObj) y).toArray(JSONObj[]::new));
+        return getArray(pos).flatMap(x -> x.stream().map(y -> new JSONObj((JSONObject) y)).toArray(JSONObj[]::new));
     }
 
     public Result<JSONArr[]> getArrayArray (int pos) {
-        return getArray(pos).flatMap(x -> x.stream().map(y -> (JSONArr) y).toArray(JSONArr[]::new));
+        return getArray(pos).flatMap(x -> x.stream().map(y -> new JSONArr((JSONArray) y)).toArray(JSONArr[]::new));
     }
 
     public Result<String[]> getStringArray (int pos) {
