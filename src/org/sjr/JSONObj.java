@@ -4,8 +4,6 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.rol.ReadOnlyMap;
-import org.rol.ReadOnlySet;
 import org.sjr.codec.JSONDecoder;
 import org.sjr.codec.JSONEncoder;
 
@@ -14,7 +12,7 @@ import java.io.Reader;
 import java.lang.reflect.Array;
 import java.util.*;
 
-public class JSONObj extends ReadOnlyMap<String, Object> {
+public class JSONObj extends AbstractMap<String, Object> {
     final protected static JSONParser PARSER = new JSONParser();
     final protected JSONObject object;
 
@@ -35,7 +33,7 @@ public class JSONObj extends ReadOnlyMap<String, Object> {
     }
 
     @Override
-    protected Set<Entry<String, Object>> defaultEntrySet () {
+    public Set<Entry<String, Object>> entrySet () {
         return this.object.entrySet();
     }
 

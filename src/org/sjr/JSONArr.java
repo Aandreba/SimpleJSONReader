@@ -3,7 +3,6 @@ package org.sjr;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
-import org.rol.ReadOnlyList;
 import org.sjr.codec.JSONDecoder;
 import org.sjr.codec.JSONEncoder;
 
@@ -13,7 +12,7 @@ import java.lang.reflect.Array;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class JSONArr extends ReadOnlyList<Object> {
+public class JSONArr extends AbstractList<Object> {
     final protected JSONArray array;
 
     public JSONArr () {
