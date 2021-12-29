@@ -1,6 +1,7 @@
-package org.sjr.codec;
+package org.sjr.codec.defaults;
 
 import org.sjr.JSONObj;
+import org.sjr.codec.JSONCodec;
 
 public class IdentityCodec implements JSONCodec<JSONObj> {
     final public static IdentityCodec INSTANCE = new IdentityCodec();

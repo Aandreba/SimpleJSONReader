@@ -1,14 +1,16 @@
-import org.sjr.ExceptionEncoder;
 import org.sjr.JSONObj;
+import org.sjr.codec.defaults.LocalDateTimeCodec;
+
+import java.time.LocalDateTime;
 
 public class Main {
     public static void main (String ...args) {
         var json = new JSONObj();
-        var result = json.put(
-                "null pointer", ExceptionEncoder.INSTANCE,
-                new NullPointerException(), new ArithmeticException("Division by zero")
-        );
+        json.setSupplier(LocalDateTimeCodec.INSTANCE);
 
+        var now = LocalDateTime.now();
+        var result = json.put("now", now);
+        var decode = json.getAs("now", LocalDateTime.class);
         System.out.println();
     }
 }

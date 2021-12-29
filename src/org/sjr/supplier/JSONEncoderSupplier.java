@@ -1,7 +1,6 @@
 package org.sjr.supplier;
 
 import org.sjr.codec.JSONEncoder;
-import org.sjr.supplier.concat.ConcatDecoderSupplier;
 import org.sjr.supplier.concat.ConcatEncoderSupplier;
 
 import java.util.Optional;
