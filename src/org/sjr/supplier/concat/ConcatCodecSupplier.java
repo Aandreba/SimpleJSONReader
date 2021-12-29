@@ -2,7 +2,6 @@ package org.sjr.supplier.concat;
 
 import org.sjr.codec.JSONCodec;
 import org.sjr.supplier.JSONCodecSupplier;
-import org.sjr.supplier.identity.IdentityCodecSupplier;
 
 import java.util.Optional;
 
@@ -12,11 +11,6 @@ public class ConcatCodecSupplier implements JSONCodecSupplier {
     public ConcatCodecSupplier (JSONCodecSupplier alpha, JSONCodecSupplier beta) {
         this.alpha = alpha;
         this.beta = beta;
-    }
-
-    public ConcatCodecSupplier (JSONCodec<?> alpha, JSONCodec<?> beta) {
-        this.alpha = new IdentityCodecSupplier(alpha);
-        this.beta = new IdentityCodecSupplier(beta);
     }
 
     @Override

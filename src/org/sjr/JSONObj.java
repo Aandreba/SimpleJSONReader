@@ -8,7 +8,9 @@ import org.sjr.codec.JSONDecoder;
 import org.sjr.codec.JSONEncoder;
 import org.sjr.supplier.JSONCodecSupplier;
 import org.sjr.supplier.JSONDecoderSupplier;
+import org.sjr.supplier.JSONEncoderSupplier;
 
+import javax.swing.text.html.Option;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Array;
@@ -37,6 +39,14 @@ public class JSONObj extends AbstractMap<String, Object> {
     public JSONObj (Reader reader) throws IOException, ParseException {
         this.object = (JSONObject) PARSER.parse(reader);
         this.supplier = Optional.empty();
+    }
+
+    public Optional<JSONCodecSupplier> getSupplier() {
+        return supplier;
+    }
+
+    public void setSupplier (JSONCodecSupplier supplier) {
+        this.supplier = Optional.of(supplier);
     }
 
     @Override
@@ -90,10 +100,6 @@ public class JSONObj extends AbstractMap<String, Object> {
 
     public Result<Double> getDouble (String key) {
         return _getAs(key, Number.class).flatMap(Number::doubleValue);
-    }
-
-    public <T> Result<T> getDecodable (String key, JSONDecoder<T> decoder) {
-        return getObject(key).flatMap(decoder::decode);
     }
 
     public Result<JSONObj[]> getObjectArray (String key) {
@@ -155,8 +161,19 @@ public class JSONObj extends AbstractMap<String, Object> {
         return Result.ofSupplier(() -> array.stream().map(x -> (Number) x).mapToDouble(Number::doubleValue).toArray());
     }
 
-    public <T> Result<T[]> getDecodableArray (String key, JSONDecoder<T> decoder) {
-        return getArray(key).flatMap(array -> array.stream().map(x -> decoder.decode((JSONObject) x)).toArray(i -> (T[]) Array.newInstance(decoder.getTargetClass(), i)));
+    public <T> Result<T[]> getAsArray (String key, JSONDecoderSupplier supplier) {
+        return Result.ofSupplier(() -> {
+            var array = this.getArray(key).get();
+            var stream = array.stream()
+                    .map(x -> new Couple<>((JSONObject) x, (JSONDecoder<Object>) supplier.decoder(x.getClass()).get()))
+                    .map(x -> (T) x.beta.decode(x.alpha));
+
+            return stream.toArray(i -> (T[]) Array.newInstance(array.get(0).getClass(), i));
+        });
+    }
+
+    public <T> Result<T[]> getAsArray (String key) {
+        return Result.ofResultSupplier(() -> getAsArray(key, this.supplier.get()));
     }
 
     // SETTERS
@@ -200,8 +217,23 @@ public class JSONObj extends AbstractMap<String, Object> {
         this.object.put(key, value.array);
     }
 
-    public <T> void put (String key, JSONEncoder<T> encoder, T value) {
-        this.put(key, encoder.encode(value));
+    public Optional<Exception> put (String key, JSONEncoderSupplier supplier, Object value) {
+        try {
+            JSONEncoder<Object> encoder = (JSONEncoder<Object>) supplier.encoder(value.getClass()).get();
+            this.put(key, encoder.encode(value));
+        } catch (Exception e) {
+            return Optional.of(e);
+        }
+
+        return Optional.empty();
+    }
+
+    public Optional<Exception> put (String key, Object value) {
+        try {
+            return this.put(key, this.supplier.get(), value);
+        } catch (Exception e) {
+            return Optional.of(e);
+        }
     }
 
     public void put (String key, String ...value) {
@@ -244,20 +276,50 @@ public class JSONObj extends AbstractMap<String, Object> {
         this.object.put(key, Arrays.stream(value).map(x -> x.array).collect(JSONCollector.INSTANCE));
     }
 
-    public <T> void put (String key, JSONEncoder<T> encoder, T ...value) {
-        var array = Arrays.stream(value)
-                .map(x -> encoder.encode(x).object)
-                .collect(JSONCollector.INSTANCE);
+    public Optional<Exception> put (String key, JSONEncoderSupplier supplier, Object ...value) {
+        try {
+            var array = Arrays.stream(value)
+                    .map(x -> new Couple<>(x, (JSONEncoder<Object>) supplier.encoder(x.getClass()).get()))
+                    .map(x -> x.beta.encode(x.alpha).object)
+                    .collect(JSONCollector.INSTANCE);
 
-        this.put(key, array);
+            this.put(key, array);
+        } catch (Exception e) {
+            return Optional.of(e);
+        }
+
+        return Optional.empty();
     }
 
-    public <T> void put (String key, JSONEncoder<T> encoder, List<T> value) {
-        var array = value.stream()
-                .map(x -> encoder.encode(x).object)
-                .collect(JSONCollector.INSTANCE);
+    public Optional<Exception> put (String key, Object ...value) {
+        try {
+            return this.put(key, this.supplier.get(), value);
+        } catch (Exception e) {
+            return Optional.of(e);
+        }
+    }
 
-        this.put(key, array);
+    public Optional<Exception> put (String key, JSONEncoderSupplier supplier, List<?> value) {
+        try {
+            var array = value.stream()
+                    .map(x -> new Couple<>(x, (JSONEncoder<Object>) supplier.encoder(x.getClass()).get()))
+                    .map(x -> x.beta.encode(x.alpha).object)
+                    .collect(JSONCollector.INSTANCE);
+
+            this.put(key, array);
+        } catch (Exception e) {
+            return Optional.of(e);
+        }
+
+        return Optional.empty();
+    }
+
+    public Optional<Exception> put (String key, List<?> value) {
+        try {
+            return this.put(key, this.supplier.get(), value);
+        } catch (Exception e) {
+            return Optional.of(e);
+        }
     }
 
     // STRING
