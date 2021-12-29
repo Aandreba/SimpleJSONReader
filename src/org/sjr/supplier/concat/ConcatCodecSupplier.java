@@ -20,10 +20,10 @@ public class ConcatCodecSupplier implements JSONCodecSupplier {
     }
 
     @Override
-    public <T> Optional<JSONCodec<T>> get (Class<T> clazz) {
-        var first = alpha.get(clazz);
+    public <T> Optional<JSONCodec<T>> codec(Class<T> clazz) {
+        var first = alpha.codec(clazz);
         if (first.isEmpty()) {
-            return beta.get(clazz);
+            return beta.codec(clazz);
         }
 
         return first;
