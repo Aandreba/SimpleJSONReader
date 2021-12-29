@@ -6,6 +6,8 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.sjr.codec.JSONDecoder;
 import org.sjr.codec.JSONEncoder;
+import org.sjr.supplier.JSONCodecSupplier;
+import org.sjr.supplier.JSONDecoderSupplier;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -15,21 +17,26 @@ import java.util.*;
 public class JSONObj extends AbstractMap<String, Object> {
     final protected static JSONParser PARSER = new JSONParser();
     final protected JSONObject object;
+    public Optional<JSONCodecSupplier> supplier;
 
     public JSONObj () {
         this.object = new JSONObject();
+        this.supplier = Optional.empty();
     }
 
     public JSONObj (JSONObject object) {
         this.object = object;
+        this.supplier = Optional.empty();
     }
 
     public JSONObj (String json) throws ParseException {
         this.object = (JSONObject) PARSER.parse(json);
+        this.supplier = Optional.empty();
     }
 
     public JSONObj (Reader reader) throws IOException, ParseException {
         this.object = (JSONObject) PARSER.parse(reader);
+        this.supplier = Optional.empty();
     }
 
     @Override
@@ -41,20 +48,27 @@ public class JSONObj extends AbstractMap<String, Object> {
         return object.get(key);
     }
 
-    public <T> Result<T> getAs (String key) {
-        return Result.ofSupplier(() -> (T) get(key));
+    public <T> Result<T> getAs (String key, Class<T> type, JSONDecoderSupplier supplier) {
+        return Result.ofSupplier(() -> {
+            var encoder = supplier.decoder(type).get();
+            return encoder.decode(getObject(key).get());
+        });
     }
 
     public <T> Result<T> getAs (String key, Class<T> type) {
-        return getAs(key);
+        return Result.ofResultSupplier(() -> getAs(key, type, this.supplier.get()));
     }
 
     public Result<JSONObj> getObject (String key) {
-        return getAs(key, JSONObject.class).map(JSONObj::new);
+        return _getAs(key, JSONObject.class)
+                .map(JSONObj::new)
+                .compute(x -> x.supplier = this.supplier);
     }
 
     public Result<JSONArr> getArray (String key) {
-        return getAs(key, JSONArray.class).map(JSONArr::new);
+        return _getAs(key, JSONArray.class)
+                .map(JSONArr::new)
+                .compute(x -> x.supplier = this.supplier);
     }
 
     // GETTERS
@@ -63,19 +77,19 @@ public class JSONObj extends AbstractMap<String, Object> {
     }
 
     public Result<Integer> getInt (String key) {
-        return getAs(key, Number.class).flatMap(Number::intValue);
+        return _getAs(key, Number.class).flatMap(Number::intValue);
     }
 
     public Result<Long> getLong (String key) {
-        return getAs(key, Number.class).flatMap(Number::longValue);
+        return _getAs(key, Number.class).flatMap(Number::longValue);
     }
 
     public Result<Float> getFloat (String key) {
-        return getAs(key, Number.class).flatMap(Number::floatValue);
+        return _getAs(key, Number.class).flatMap(Number::floatValue);
     }
 
     public Result<Double> getDouble (String key) {
-        return getAs(key, Number.class).flatMap(Number::doubleValue);
+        return _getAs(key, Number.class).flatMap(Number::doubleValue);
     }
 
     public <T> Result<T> getDecodable (String key, JSONDecoder<T> decoder) {
@@ -254,5 +268,14 @@ public class JSONObj extends AbstractMap<String, Object> {
     @Override
     public String toString() {
         return object.toString();
+    }
+
+    // PRIVATES
+    <T> Result<T> _getAs (String key) {
+        return Result.ofSupplier(() -> (T) get(key));
+    }
+
+    <T> Result<T> _getAs (String key, Class<T> type) {
+        return _getAs(key);
     }
 }

@@ -1,8 +1,8 @@
 package org.sjr;
 
 import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -15,15 +15,13 @@ final public class Result<T> {
     final private Exception error;
 
     public Result (T value) {
-        Objects.requireNonNull(value);
         this.value = value;
-        this.error = null;
+        this.error = value == null ? new NullPointerException() : null;
     }
 
     public Result (Exception error) {
-        Objects.requireNonNull(error);
         this.value = null;
-        this.error = error;
+        this.error = error == null ? new NullPointerException() : error;
     }
 
     public static <T> Result<T> ofSupplier (Constructor<T> supplier) {
@@ -32,6 +30,30 @@ final public class Result<T> {
         } catch (Exception e) {
             return new Result<>(e);
         }
+    }
+
+    public static <T> Result<T> ofResultSupplier (Constructor<Result<T>> supplier) {
+        try {
+            return supplier.init();
+        } catch (Exception e) {
+            return new Result<>(e);
+        }
+    }
+
+    public static <T> Result<T> ofOptionalSupplier (Constructor<Optional<T>> supplier) {
+        try {
+            return ofOptional(supplier.init());
+        } catch (Exception e) {
+            return new Result<>(e);
+        }
+    }
+
+    public static <T> Result<T> ofOptional (Optional<T> value) {
+        if (value.isEmpty()) {
+            return new Result<>(new NoSuchElementException("No value present"));
+        }
+
+        return new Result<>(value.get());
     }
 
     public boolean isValue () {
@@ -61,18 +83,42 @@ final public class Result<T> {
 
     public <O> Result<O> map (Function<T,O> mapper) {
         if (this.isError()) {
-            return new Result<>(this.error);
+            return (Result<O>) this;
         }
 
         return new Result<>(mapper.apply(this.value));
     }
 
-    public <O> Result<O> flatMap (Function<T,O> mapper) {
+    public <O> Result<O> flatMap (Function<T, O> mapper) {
         if (this.isError()) {
-            return new Result<>(this.error);
+            return (Result<O>) this;
         }
 
         return ofSupplier(() -> mapper.apply(this.value));
+    }
+
+    public <O> Result<O> flatMapResult (Function<T, Result<O>> mapper) {
+        if (this.isError()) {
+            return (Result<O>) this;
+        }
+
+        return mapper.apply(this.value);
+    }
+
+    public <O> Result<O> flatMapOptional (Function<T, Optional<O>> mapper) {
+        if (this.isError()) {
+            return (Result<O>) this;
+        }
+
+        return ofOptional(mapper.apply(this.value));
+    }
+
+    public Result<T> compute (Consumer<T> consumer) {
+        if (this.isValue()) {
+            consumer.accept(this.value);
+        }
+
+        return this;
     }
 
     public Optional<T> toOptional () {

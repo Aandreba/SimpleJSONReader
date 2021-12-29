@@ -4,4 +4,5 @@ import org.sjr.JSONObj;
 
 public interface JSONEncoder<T> {
     JSONObj encode (T value);
+    Class<T> getTargetClass ();
 }

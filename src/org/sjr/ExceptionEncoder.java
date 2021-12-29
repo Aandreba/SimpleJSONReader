@@ -15,4 +15,9 @@ public class ExceptionEncoder implements JSONEncoder<Exception> {
 
         return result;
     }
+
+    @Override
+    public Class<Exception> getTargetClass() {
+        return Exception.class;
+    }
 }

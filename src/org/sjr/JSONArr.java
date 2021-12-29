@@ -5,6 +5,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 import org.sjr.codec.JSONDecoder;
 import org.sjr.codec.JSONEncoder;
+import org.sjr.supplier.JSONCodecSupplier;
+import org.sjr.supplier.JSONDecoderSupplier;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -14,9 +16,11 @@ import java.util.stream.Stream;
 
 public class JSONArr extends AbstractList<Object> {
     final protected JSONArray array;
+    public Optional<JSONCodecSupplier> supplier;
 
     public JSONArr () {
         this.array = new JSONArray();
+        this.supplier = Optional.empty();
     }
 
     protected JSONArr (boolean... list) {
@@ -87,6 +91,8 @@ public class JSONArr extends AbstractList<Object> {
             this.array = new JSONArray();
             this.array.addAll(list);
         }
+
+        this.supplier = Optional.empty();
     }
 
     protected JSONArr (Stream<?> stream) {
@@ -96,10 +102,12 @@ public class JSONArr extends AbstractList<Object> {
 
     public JSONArr(String json) throws ParseException {
         this.array = (JSONArray) JSONObj.PARSER.parse(json);
+        this.supplier = Optional.empty();
     }
 
     public JSONArr(Reader reader) throws IOException, ParseException {
         this.array = (JSONArray) JSONObj.PARSER.parse(reader);
+        this.supplier = Optional.empty();
     }
 
     public int size () {
@@ -110,20 +118,27 @@ public class JSONArr extends AbstractList<Object> {
         return array.get(pos);
     }
 
-    public <T> Result<T> getAs (int pos) {
-        return Result.ofSupplier(() -> (T) get(pos));
+    public <T> Result<T> getAs (int pos, Class<T> type, JSONDecoderSupplier supplier) {
+        return Result.ofSupplier(() -> {
+            var encoder = supplier.decoder(type).get();
+            return encoder.decode(getObject(pos).get());
+        });
     }
 
     public <T> Result<T> getAs (int pos, Class<T> type) {
-        return getAs(pos);
+        return Result.ofResultSupplier(() -> getAs(pos, type, this.supplier.get()));
     }
 
     public Result<JSONObj> getObject (int pos) {
-        return getAs(pos, JSONObject.class).map(JSONObj::new);
+        return _getAs(pos, JSONObject.class)
+                .map(JSONObj::new)
+                .compute(x -> x.supplier = this.supplier);
     }
 
     public Result<JSONArr> getArray (int pos) {
-        return getAs(pos, JSONArray.class).map(JSONArr::new);
+        return _getAs(pos, JSONArray.class)
+                .map(JSONArr::new)
+                .compute(x -> x.supplier = this.supplier);
     }
 
     // GETTERS
@@ -132,19 +147,19 @@ public class JSONArr extends AbstractList<Object> {
     }
 
     public Result<Integer> getInt (int pos) {
-        return getAs(pos, Number.class).flatMap(Number::intValue);
+        return _getAs(pos, Number.class).flatMap(Number::intValue);
     }
 
     public Result<Long> getLong (int pos) {
-        return getAs(pos, Number.class).flatMap(Number::longValue);
+        return _getAs(pos, Number.class).flatMap(Number::longValue);
     }
 
     public Result<Float> getFloat (int pos) {
-        return getAs(pos, Number.class).flatMap(Number::floatValue);
+        return _getAs(pos, Number.class).flatMap(Number::floatValue);
     }
 
     public Result<Double> getDouble (int pos) {
-        return getAs(pos, Number.class).flatMap(Number::doubleValue);
+        return _getAs(pos, Number.class).flatMap(Number::doubleValue);
     }
 
     public <T> Result<T> getDecodable (int pos, JSONDecoder<T> decoder) {
@@ -323,5 +338,14 @@ public class JSONArr extends AbstractList<Object> {
     @Override
     public String toString() {
         return array.toString();
+    }
+
+    // PRIVATE
+    <T> Result<T> _getAs(int pos) {
+        return Result.ofSupplier(() -> (T) get(pos));
+    }
+
+    <T> Result<T> _getAs(int pos, Class<T> type) {
+        return _getAs(pos);
     }
 }
